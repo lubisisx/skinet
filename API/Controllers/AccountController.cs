@@ -25,13 +25,20 @@ namespace API.Controllers
             _userManager = userManager;
         }
 
-        [HttpGet]
         [Authorize]
-        public async Task<ActionResult<AddressDto>> GetCurrentUser()
+        [HttpGet]
+        public async Task<ActionResult<UserDto>> GetCurrentUser()
         {
-            var user = await _userManager.FindByEmailFromClaimsPrinciple(User);
+            var email = User.FindFirstValue(ClaimTypes.Email);
 
-            return _mapper.Map<Address, AddressDto>(user.Address);
+            var user = await _userManager.FindUserByClaimsPrincipleWithAddress(User);
+
+            return new UserDto
+            {
+                Email = user.Email,
+                Token = _tokenService.CreateToken(user),
+                DisplayName = user.DisplayName
+            };
         }
 
         [HttpGet("emailexists")]
